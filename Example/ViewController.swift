@@ -24,7 +24,7 @@ class ViewController: UIViewController {
         didSet {
             avatarImage.layer.cornerRadius = avatarImage.frame.width/2
             avatarImage.layer.masksToBounds = true
-        } 
+        }
     }
     
     @IBOutlet weak var colorSelectedView: UIView! {
@@ -34,7 +34,7 @@ class ViewController: UIViewController {
             colorSelectedView.backgroundColor = SkeletonDefaultConfig.tintColor
         }
     }
-
+    
     @IBOutlet weak var switchAnimated: UISwitch!
     @IBOutlet weak var skeletonTypeSelector: UISegmentedControl!
     
@@ -42,11 +42,14 @@ class ViewController: UIViewController {
         return skeletonTypeSelector.selectedSegmentIndex == 0 ? .solid : .gradient
     }
     
+    // Keep track of selection of color
+    var lastSelectedRow: Int = 0
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         view.showAnimatedSkeleton()
     }
-
+    
     @IBAction func changeAnimated(_ sender: Any) {
         if switchAnimated.isOn {
             view.startSkeletonAnimation()
@@ -87,19 +90,25 @@ class ViewController: UIViewController {
     }
     
     func showAlertPicker() {
-       
+        
         let alertView = UIAlertController(title: "Select color", message: "\n\n\n\n\n\n", preferredStyle: .alert)
         
         let pickerView = UIPickerView(frame: CGRect(x: 0, y: 50, width: 260, height: 115))
         pickerView.dataSource = self
         pickerView.delegate = self
+        pickerView.selectRow(lastSelectedRow, inComponent: 0, animated: false)
         
         alertView.view.addSubview(pickerView)
         
         let action = UIAlertAction(title: "OK", style: .default) { [unowned pickerView, unowned self] _ in
             let row = pickerView.selectedRow(inComponent: 0)
-            self.colorSelectedView.backgroundColor = colors[row].0
-            self.refreshSkeleton()
+            
+            // Avoid refreshing if the same color is selected
+            if self.lastSelectedRow != row {
+                self.lastSelectedRow = row
+                self.colorSelectedView.backgroundColor = colors[row].0
+                self.refreshSkeleton()
+            }
         }
         alertView.addAction(action)
         
@@ -119,7 +128,7 @@ extension ViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     }
     
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-       return colors.count
+        return colors.count
     }
     
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
